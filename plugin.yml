@@ -1,0 +1,8 @@
+name: MiningRewards
+main: david\miningrewards\Loader
+load: STARTUP
+version: "1.0"
+api: 3.0.0
+authors:
+- David
+description: Get rewards while mining
