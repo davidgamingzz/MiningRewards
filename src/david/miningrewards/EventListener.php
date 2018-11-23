@@ -41,11 +41,15 @@ class EventListener implements Listener, Messages {
             return;
         }
         $player = $event->getPlayer();
+        $itemEntity = $player->getLevel()->dropItem($player->add(0, 3, 0), $item, $player->getDirectionVector()->multiply(0.5), 1000);
+        if($itemEntity === null) {
+            $player->sendMessage(TextFormat::RED . "Error occurred! Please retry to open reward!");
+            return;
+        }
         $player->sendMessage(TextFormat::GREEN . "Opening reward...!");
         $player->getInventory()->setItemInHand($item->setCount($item->getCount() - 1));
-        $item = $player->getLevel()->dropItem($player->getSide($player->getDirection(), 1), $item, new Vector3(), 1000);
-        $this->plugin->getScheduler()->scheduleRepeatingTask(new TickTask($item, 20), 5);
-        $this->plugin->getScheduler()->scheduleDelayedTask(new AnimationTask($item), 100);
+        $this->plugin->getScheduler()->scheduleRepeatingTask(new TickTask($itemEntity, 20), 5);
+        $this->plugin->getScheduler()->scheduleDelayedTask(new AnimationTask($itemEntity), 100);
     }
 
     /**
