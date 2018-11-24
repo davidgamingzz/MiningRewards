@@ -2,10 +2,12 @@
 
 namespace david\miningrewards;
 
+use pocketmine\item\enchantment\Enchantment;
+use pocketmine\item\enchantment\EnchantmentInstance;
 use pocketmine\item\Item;
-use pocketmine\level\Position;
 use pocketmine\plugin\PluginBase;
 use pocketmine\plugin\PluginException;
+use pocketmine\utils\TextFormat;
 
 class Loader extends PluginBase {
 
@@ -48,12 +50,36 @@ class Loader extends PluginBase {
             throw new PluginException("Error while parsing through configuration file! Couldn't find the required elements!");
         }
         $rewards = [];
+        $count = 0;
         foreach($elements["rewards"] as $reward) {
+            ++$count;
             $reward = explode(":", $reward);
             if(!isset($reward[2])) {
-                throw new PluginException("Error while parsing through rewards! Check for any errors!");
+                throw new PluginException("Error while parsing through rewards! Error found in reward #$count");
             }
-            $rewards[] = Item::get((int)$reward[0], (int)$reward[1], (int)$reward[2]);
+            $item = Item::get((int)$reward[0], (int)$reward[1], (int)$reward[2]);
+            if(isset($reward[3])) {
+                $item->setCustomName(str_replace("&", TextFormat::ESCAPE, (string)$reward[3]));
+            }
+            if(isset($reward[4])) {
+                $enchantments = explode(",", (string)$reward[4]);
+                foreach($enchantments as $enchantment) {
+                    $parts = explode("/", $enchantment);
+                    if(!isset($parts[1])) {
+                        throw new PluginException("Error while parsing through rewards! Error found in reward #$count");
+                    }
+                    $enchantment = Enchantment::getEnchantment((int)$parts[0]);
+                    if($enchantment === null) {
+                        throw new PluginException("Error while parsing through rewards! Unknown enchant id: $parts[0]. Error found in reward #$count");
+                    }
+                    $level = (int)$parts[1];
+                    if($level < 0) {
+                        throw new PluginException("Error while parsing through rewards! Invalid enchant level: $level. Error found in reward #$count");
+                    }
+                    $item->addEnchantment(new EnchantmentInstance($enchantment, $level));
+                }
+            }
+            $rewards[] = $item;
         }
         $this->rewards = $rewards;
         $this->countMin = (int)$elements["reward-count-min"] > 0 ? (int)$elements["reward-count-min"] : 1;

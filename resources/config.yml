@@ -1,6 +1,7 @@
 ---
+# Use & for colors in custom names
 rewards:
- - "1:0:1" # Id:Meta:Count
+ - "1:0:1" # Id:Meta:Count:Custom Name:EnchantId/EnchantLevel,EnchantId/EnchantLevel...
 
 reward-count-min: 1 # The min amount of rewards a player can get.
 reward-count-max: 5 # The max amount of rewards a player can get.

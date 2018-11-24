@@ -11,7 +11,6 @@ use pocketmine\event\player\PlayerInteractEvent;
 use pocketmine\item\Item;
 use pocketmine\level\particle\HugeExplodeSeedParticle;
 use pocketmine\level\sound\BlazeShootSound;
-use pocketmine\math\Vector3;
 use pocketmine\utils\TextFormat;
 
 class EventListener implements Listener, Messages {
