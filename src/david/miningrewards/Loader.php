@@ -45,43 +45,60 @@ class Loader extends PluginBase {
      */
     public function parseConfig() {
         $elements = $this->getConfig()->getAll();
-        if((!isset($elements["rewards"]["items"])) or (!isset($elements["reward-count-min"])) or
+        if((!isset($elements["rewards"])) or (!isset($elements["reward-count-min"])) or
             (!isset($elements["reward-count-max"]) or (!isset($elements["chance"])))) {
             throw new PluginException("Error while parsing through configuration file! Couldn't find the required elements!");
         }
         $rewards = [];
-        $count = 0;
-        foreach($elements["rewards"]["items"] as $reward) {
-            ++$count;
-            $reward = explode(":", $reward);
-            if(!isset($reward[2])) {
-                throw new PluginException("Error while parsing through rewards! Error found in reward item #$count");
-            }
-            $item = Item::get((int)$reward[0], (int)$reward[1], (int)$reward[2]);
-            if(isset($reward[3])) {
-                $item->setCustomName(str_replace("&", TextFormat::ESCAPE, (string)$reward[3]));
-            }
-            if(isset($reward[4])) {
-                $enchantments = explode(",", (string)$reward[4]);
-                foreach($enchantments as $enchantment) {
-                    $parts = explode("/", $enchantment);
-                    if(!isset($parts[1])) {
-                        throw new PluginException("Error while parsing through rewards! Error found in reward item #$count");
-                    }
-                    $enchantment = Enchantment::getEnchantment((int)$parts[0]);
-                    if($enchantment === null) {
-                        throw new PluginException("Error while parsing through rewards! Unknown enchant id: $parts[0]. Error found in reward item #$count");
-                    }
-                    $level = (int)$parts[1];
-                    if($level < 0) {
-                        throw new PluginException("Error while parsing through rewards! Invalid enchant level: $level. Error found in reward item #$count");
-                    }
-                    $item->addEnchantment(new EnchantmentInstance($enchantment, $level));
+        foreach($elements["rewards"] as $id => $reward) {
+            if($reward["type"] === "item") {
+                if((!isset($reward["id"])) or (!is_numeric($reward["id"]))) {
+                    throw new PluginException("Error while parsing through rewards! Invalid item identifier in reward named $id!");
                 }
+                if((!isset($reward["meta"])) or (!is_numeric($reward["meta"]))) {
+                    throw new PluginException("Error while parsing through rewards! Invalid item meta in reward named $id!");
+                }
+                if((!isset($reward["count"])) or (!is_numeric($reward["count"]))) {
+                    throw new PluginException("Error while parsing through rewards! Invalid item count in reward named $id!");
+                }
+                $item = Item::get((int)$reward["id"], (int)$reward["meta"], (int)$reward["count"]);
+                if(isset($reward["customName"]) and $reward["customName"] !== "Default") {
+                    $item->setCustomName(str_replace("&", TextFormat::ESCAPE, (string)$reward["customName"]));
+                }
+                if(isset($reward["enchantments"])) {
+                    foreach($reward["enchantments"] as $enchantment) {
+                        $parts = explode(":", $enchantment);
+                        if(!isset($parts[1])) {
+                            throw new PluginException("Error while parsing through rewards! Invalid enchantment found in reward named $id!");
+                        }
+                        $enchantment = Enchantment::getEnchantment((int)$parts[0]);
+                        if($enchantment === null) {
+                            throw new PluginException("Error while parsing through rewards! Unknown enchantment id $parts[0] in reward named $id!");
+                        }
+                        $level = (int)$parts[1];
+                        if($level < 0) {
+                            throw new PluginException("Error while parsing through rewards! Invalid enchantment level $level in reward named $id.");
+                        }
+                        $item->addEnchantment(new EnchantmentInstance($enchantment, $level));
+                    }
+                }
+                $rewards[] = $item;
+                continue;
             }
-            $rewards[] = $item;
+            if($reward["type"] === "command") {
+                if(!isset($reward["command"])) {
+                    throw new PluginException("Error while parsing through rewards! Invalid command in reward named $id!");
+                }
+                $command = $reward["command"];
+                if(isset($reward["message"])) {
+                    $command = $command . ":" . $reward["message"];
+                }
+                $rewards[] = (string)$command;
+                continue;
+            }
+            throw new PluginException("Error while parsing through rewards! Invalid type in reward named $id!");
         }
-        $this->rewards = array_merge($rewards, $elements["rewards"]["commands"]);
+        $this->rewards = $rewards;
         $this->countMin = (int)$elements["reward-count-min"] > 0 ? (int)$elements["reward-count-min"] : 1;
         $this->countMax = (int)$elements["reward-count-max"] > $this->countMin ? (int)$elements["reward-count-max"] : 5;
         $this->chance = (int)$elements["chance"] > 0 ? (int)$elements["chance"] : 100;
