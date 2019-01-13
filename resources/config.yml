@@ -19,5 +19,5 @@ rewards:
 reward-count-min: 1 # The min amount of rewards a player can get.
 reward-count-max: 5 # The max amount of rewards a player can get.
 
-chance: 100 # Chance of getting reward
+chance: 100 # Chance of getting crate for rewards
 ...
