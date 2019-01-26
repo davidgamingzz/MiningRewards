@@ -26,6 +26,9 @@ class Loader extends PluginBase {
     /** @var int */
     private $chance;
 
+    /** @var int */
+    private $animationTickRate;
+
     /** @var self */
     private static $instance;
 
@@ -102,6 +105,7 @@ class Loader extends PluginBase {
         $this->countMin = (int)$elements["reward-count-min"] > 0 ? (int)$elements["reward-count-min"] : 1;
         $this->countMax = (int)$elements["reward-count-max"] > $this->countMin ? (int)$elements["reward-count-max"] : 5;
         $this->chance = (int)$elements["chance"] > 0 ? (int)$elements["chance"] : 100;
+        $this->animationTickRate = (int)$elements["lengthOfAnimation"] > 0 ? (int)$elements["lengthOfAnimation"] : 20;
     }
 
     /**
@@ -137,5 +141,12 @@ class Loader extends PluginBase {
      */
     public function getChance(): int {
         return $this->chance;
+    }
+
+    /**
+     * @return int
+     */
+    public function getAnimationTickRate(): int {
+        return $this->animationTickRate;
     }
 }

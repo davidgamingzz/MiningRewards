@@ -3,7 +3,6 @@
 namespace david\miningrewards;
 
 use david\miningrewards\item\Reward;
-use david\miningrewards\task\AnimationTask;
 use david\miningrewards\task\TickTask;
 use pocketmine\event\block\BlockBreakEvent;
 use pocketmine\event\Listener;
@@ -41,14 +40,9 @@ class EventListener implements Listener, Messages {
         }
         $player = $event->getPlayer();
         $itemEntity = $player->getLevel()->dropItem($player->add(0, 3, 0), $item, $player->getDirectionVector()->multiply(0.5), 1000);
-        if($itemEntity === null) {
-            $player->sendMessage(TextFormat::RED . "Error occurred! Please retry to open reward!");
-            return;
-        }
         $player->sendMessage(TextFormat::GREEN . "Opening reward...!");
         $player->getInventory()->setItemInHand($item->setCount($item->getCount() - 1));
-        $this->plugin->getScheduler()->scheduleRepeatingTask(new TickTask($itemEntity, 20), 5);
-        $this->plugin->getScheduler()->scheduleDelayedTask(new AnimationTask($player, $itemEntity), 100);
+        $this->plugin->getScheduler()->scheduleRepeatingTask(new TickTask($player, $itemEntity, $this->plugin->getAnimationTickRate()), 5);
     }
 
     /**

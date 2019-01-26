@@ -3,21 +3,24 @@
 namespace david\miningrewards\task;
 
 use david\miningrewards\Loader;
-use pocketmine\level\Level;
+use pocketmine\entity\object\ItemEntity;
 use pocketmine\level\particle\FlameParticle;
 use pocketmine\level\particle\SmokeParticle;
-use pocketmine\level\Position;
 use pocketmine\level\sound\ClickSound;
-use pocketmine\plugin\PluginException;
+use pocketmine\Player;
 use pocketmine\scheduler\Task;
+use pocketmine\utils\TextFormat;
 
 class TickTask extends Task {
 
     /** @var int */
     private $limit;
 
-    /** @var Position */
-    private $position;
+    /** @var Player */
+    private $owner;
+
+    /** @var ItemEntity */
+    private $entity;
 
     /** @var int */
     private $runs = 0;
@@ -25,11 +28,13 @@ class TickTask extends Task {
     /**
      * TickTask constructor.
      *
-     * @param Position $position
+     * @param Player $owner
+     * @param ItemEntity $entity
      * @param int $limit
      */
-    public function __construct(Position $position, int $limit) {
-        $this->position = $position;
+    public function __construct(Player $owner, ItemEntity $entity, int $limit) {
+        $this->owner = $owner;
+        $this->entity = $entity;
         $this->limit = $limit;
     }
 
@@ -38,18 +43,29 @@ class TickTask extends Task {
      */
     public function onRun(int $currentTick) {
         $this->runs++;
+        $scheduler = Loader::getInstance()->getScheduler();
         if($this->runs === $this->limit) {
-            Loader::getInstance()->getScheduler()->cancelTask($this->getTaskId());
+            $scheduler->cancelTask($this->getTaskId());
+            $scheduler->scheduleTask(new AnimationTask($this->owner, $this->entity));
+            return;
         }
-        $level = $this->position->getLevel();
-        if(!$level instanceof Level) {
-            Loader::getInstance()->getScheduler()->cancelTask($this->getTaskId());
-            throw new PluginException("Task can't be executed in an invalid level.");
+        if($this->owner->isOnline() === false) {
+            $this->entity->close();
+            $scheduler->cancelTask($this->getTaskId());
+            return;
         }
-        $level->addSound(new ClickSound($this->position));
+        if($this->entity->isClosed()) {
+            $this->owner->getInventory()->addItem($this->entity->getItem());
+            $this->owner->sendMessage(TextFormat::RED . "Error occurred when using reward! It has been returned to your inventory!");
+            $scheduler->cancelTask($this->getTaskId());
+            return;
+        }
+        $level = $this->entity->getLevel();
+        $level->addSound(new ClickSound($this->entity->asPosition()));
+        $position = $this->entity->asPosition()->add(0, 0.15, 0);
         for($i = 0; $i < 4; $i++) {
-            $level->addParticle(new SmokeParticle($this->position->add(0, 0.15, 0)));
-            $level->addParticle(new FlameParticle($this->position->add(0, 0.15, 0)));
+            $level->addParticle(new SmokeParticle($position));
+            $level->addParticle(new FlameParticle($position));
         }
     }
 }
