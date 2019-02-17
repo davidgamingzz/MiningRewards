@@ -44,9 +44,10 @@ class TickTask extends Task {
     public function onRun(int $currentTick) {
         $this->runs++;
         $scheduler = Loader::getInstance()->getScheduler();
-        if($this->runs === $this->limit) {
+        if($this->entity->isClosed()) {
+            $this->owner->getInventory()->addItem($this->entity->getItem());
+            $this->owner->sendMessage(Loader::getPrefix() . TextFormat::RED . "Error occurred when using reward! It has been returned to your inventory!");
             $scheduler->cancelTask($this->getTaskId());
-            $scheduler->scheduleTask(new AnimationTask($this->owner, $this->entity));
             return;
         }
         if($this->owner->isOnline() === false) {
@@ -54,10 +55,9 @@ class TickTask extends Task {
             $scheduler->cancelTask($this->getTaskId());
             return;
         }
-        if($this->entity->isClosed()) {
-            $this->owner->getInventory()->addItem($this->entity->getItem());
-            $this->owner->sendMessage(TextFormat::RED . "Error occurred when using reward! It has been returned to your inventory!");
+        if($this->runs === $this->limit) {
             $scheduler->cancelTask($this->getTaskId());
+            $scheduler->scheduleTask(new AnimationTask($this->owner, $this->entity));
             return;
         }
         $level = $this->entity->getLevel();

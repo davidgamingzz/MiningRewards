@@ -3,16 +3,13 @@
 namespace david\miningrewards;
 
 use david\miningrewards\item\Reward;
-use david\miningrewards\task\TickTask;
 use pocketmine\event\block\BlockBreakEvent;
 use pocketmine\event\Listener;
-use pocketmine\event\player\PlayerInteractEvent;
-use pocketmine\item\Item;
 use pocketmine\level\particle\HugeExplodeSeedParticle;
 use pocketmine\level\sound\BlazeShootSound;
 use pocketmine\utils\TextFormat;
 
-class EventListener implements Listener, Messages {
+class EventListener implements Listener {
 
     /** @var Loader */
     private $plugin;
@@ -28,24 +25,6 @@ class EventListener implements Listener, Messages {
     }
 
     /**
-     * @param PlayerInteractEvent $event
-     */
-    public function onPlayerInteract(PlayerInteractEvent $event) {
-        $item = $event->getItem();
-        if(!$item->getId() === Item::ENDER_EYE) {
-            return;
-        }
-        if($item->getNamedTagEntry(Reward::TAG) === null) {
-            return;
-        }
-        $player = $event->getPlayer();
-        $itemEntity = $player->getLevel()->dropItem($player->add(0, 3, 0), $item, $player->getDirectionVector()->multiply(0.5), 1000);
-        $player->sendMessage(TextFormat::GREEN . "Opening reward...!");
-        $player->getInventory()->setItemInHand($item->setCount($item->getCount() - 1));
-        $this->plugin->getScheduler()->scheduleRepeatingTask(new TickTask($player, $itemEntity, $this->plugin->getAnimationTickRate()), 5);
-    }
-
-    /**
      * @param BlockBreakEvent $event
      */
     public function onBlockBreak(BlockBreakEvent $event) {
@@ -55,10 +34,19 @@ class EventListener implements Listener, Messages {
         if(mt_rand(1, $this->plugin->getChance()) === mt_rand(1, $this->plugin->getChance())) {
             $player = $event->getPlayer();
             $level = $player->getLevel();
-            $level->dropItem($player, new Reward());
+            $item = new Reward();
+            $lore = [];
+            $lore[] = TextFormat::RESET . TextFormat::YELLOW . "Reward Min: " . Loader::getInstance()->getCountMin();
+            $lore[] = TextFormat::RESET . TextFormat::YELLOW . "Reward Max: " . Loader::getInstance()->getCountMax();
+            $lore[] = "";
+            $lore[] = TextFormat::RESET . TextFormat::GRAY . "Click to open reward.";
+            $item->setLore($lore);
+            $item->setCustomName(TextFormat::RESET . TextFormat::GOLD . TextFormat::BOLD . "Reward");
+            $level->dropItem($player, $item);
             $level->addParticle(new HugeExplodeSeedParticle($player));
             $level->addSound(new BlazeShootSound($player));
-            $player->addTitle(TextFormat::BOLD . TextFormat::AQUA . self::MESSAGES[array_rand(self::MESSAGES)],
+            $titles = Loader::getTitles();
+            $player->addTitle(TextFormat::BOLD . TextFormat::AQUA . $titles[array_rand($titles)],
                 TextFormat::GRAY . "You have found a reward from mining!");
         }
     }

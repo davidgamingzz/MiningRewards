@@ -1,4 +1,20 @@
 ---
+# Item ID of the reward
+# This will permanently override the item
+mining-reward-id: 381 # Ender Eye
+
+# Use & for color
+prefix: "&8[&a&lMR&r&8] "
+
+# Titles that will be randomized
+titles:
+  - "Wow!"
+  - "Bonkers!"
+  - "Cha-Ching!"
+  - "Treasure!"
+  - "Awesome!"
+  - "Nice!"
+
 # Use & for colors in custom names
 rewards:
   1: # Can be anything

@@ -2,9 +2,11 @@
 
 namespace david\miningrewards;
 
+use david\miningrewards\item\Reward;
 use pocketmine\item\enchantment\Enchantment;
 use pocketmine\item\enchantment\EnchantmentInstance;
 use pocketmine\item\Item;
+use pocketmine\item\ItemFactory;
 use pocketmine\plugin\PluginBase;
 use pocketmine\plugin\PluginException;
 use pocketmine\utils\TextFormat;
@@ -32,6 +34,12 @@ class Loader extends PluginBase {
     /** @var self */
     private static $instance;
 
+    /** @var string */
+    private static $prefix;
+
+    /** @var string[] */
+    private static $titles;
+
     public function onLoad() {
         self::$instance = $this;
     }
@@ -39,6 +47,7 @@ class Loader extends PluginBase {
     public function onEnable() {
         @mkdir($this->getDataFolder());
         $this->saveDefaultConfig();
+        ItemFactory::registerItem(new Reward(), true);
         $this->parseConfig();
         $this->listener = new EventListener($this);
     }
@@ -49,7 +58,8 @@ class Loader extends PluginBase {
     public function parseConfig() {
         $elements = $this->getConfig()->getAll();
         if((!isset($elements["rewards"])) or (!isset($elements["reward-count-min"])) or
-            (!isset($elements["reward-count-max"]) or (!isset($elements["chance"])))) {
+            (!isset($elements["reward-count-max"])) or (!isset($elements["chance"])) or (!isset($elements["prefix"])) or
+            (!isset($elements["mining-reward-id"])) or (!isset($elements["titles"]))) {
             throw new PluginException("Error while parsing through configuration file! Couldn't find the required elements!");
         }
         $rewards = [];
@@ -106,6 +116,8 @@ class Loader extends PluginBase {
         $this->countMax = (int)$elements["reward-count-max"] > $this->countMin ? (int)$elements["reward-count-max"] : 5;
         $this->chance = (int)$elements["chance"] > 0 ? (int)$elements["chance"] : 100;
         $this->animationTickRate = (int)$elements["lengthOfAnimation"] > 0 ? (int)$elements["lengthOfAnimation"] : 20;
+        self::$prefix = str_replace("&", TextFormat::ESCAPE, (string)$elements["prefix"]);
+        self::$titles = $elements["titles"];
     }
 
     /**
@@ -113,6 +125,20 @@ class Loader extends PluginBase {
      */
     public static function getInstance(): self {
         return self::$instance;
+    }
+
+    /**
+     * @return string
+     */
+    public static function getPrefix(): string {
+        return self::$prefix;
+    }
+
+    /**
+     * @return string[]
+     */
+    public static function getTitles(): array {
+        return self::$titles;
     }
 
     /**
