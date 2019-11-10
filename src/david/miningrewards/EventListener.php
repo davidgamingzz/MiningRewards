@@ -46,7 +46,7 @@ class EventListener implements Listener {
             $level->addParticle(new HugeExplodeSeedParticle($player));
             $level->addSound(new BlazeShootSound($player));
             $titles = Loader::getTitles();
-            $player->addTitle(TextFormat::BOLD . TextFormat::AQUA . $titles[array_rand($titles)],
+            $player->sendMessage(TextFormat::BOLD . TextFormat::AQUA . $titles[array_rand($titles)],
                 TextFormat::GRAY . "You have found a reward from mining!");
         }
     }
