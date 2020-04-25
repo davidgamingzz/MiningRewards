@@ -26,6 +26,8 @@ class EventListener implements Listener {
 
     /**
      * @param BlockBreakEvent $event
+     *
+     * @priority MONITOR
      */
     public function onBlockBreak(BlockBreakEvent $event) {
         if($event->isCancelled()) {
