@@ -5,76 +5,76 @@ namespace david\miningrewards;
 use david\miningrewards\item\Reward;
 use pocketmine\item\enchantment\Enchantment;
 use pocketmine\item\enchantment\EnchantmentInstance;
+use pocketmine\item\enchantment\StringToEnchantmentParser;
 use pocketmine\item\Item;
-use pocketmine\item\ItemFactory;
+use pocketmine\item\StringToItemParser;
 use pocketmine\plugin\PluginBase;
 use pocketmine\plugin\PluginException;
 use pocketmine\utils\TextFormat;
 
 class Loader extends PluginBase {
-
     /** @var EventListener */
-    public $listener;
+    public EventListener $listener;
 
     /** @var Item[] */
-    private $rewards;
+    private array $rewards;
 
     /** @var int */
-    private $countMin;
+    private int $countMin;
 
     /** @var int */
-    private $countMax;
+    private int $countMax;
 
     /** @var int */
-    private $chance;
+    private int $chance;
 
     /** @var int */
-    private $animationTickRate;
+    private int $animationTickRate;
 
     /** @var self */
-    private static $instance;
+    private static self $instance;
 
     /** @var string */
-    private static $prefix;
+    private static string $prefix;
 
     /** @var string[] */
-    private static $titles;
+    private static array $titles;
 
-    public function onLoad() {
+    public function onLoad(): void {
         self::$instance = $this;
     }
 
-    public function onEnable() {
+    public function onEnable(): void {
         @mkdir($this->getDataFolder());
         $this->saveDefaultConfig();
-        ItemFactory::registerItem(new Reward(), true);
         $this->parseConfig();
+
         $this->listener = new EventListener($this);
     }
 
     /**
      * @throws PluginException
      */
-    public function parseConfig() {
+    public function parseConfig(): void {
         $elements = $this->getConfig()->getAll();
         if((!isset($elements["rewards"])) or (!isset($elements["reward-count-min"])) or
             (!isset($elements["reward-count-max"])) or (!isset($elements["chance"])) or (!isset($elements["prefix"])) or
             (!isset($elements["mining-reward-id"])) or (!isset($elements["titles"]))) {
             throw new PluginException("Error while parsing through configuration file! Couldn't find the required elements!");
         }
+        if(is_null(StringToItemParser::getInstance()->parse($elements["mining-reward-id"]))) {
+            throw new PluginException("Error while parsing through configuration file! Invalid item identifier in mining-reward-id!");
+        }
         $rewards = [];
         foreach($elements["rewards"] as $id => $reward) {
             if($reward["type"] === "item") {
-                if((!isset($reward["id"])) or (!is_numeric($reward["id"]))) {
+                if((!isset($reward["id"])) or (!is_string($reward["id"]))) {
                     throw new PluginException("Error while parsing through rewards! Invalid item identifier in reward named $id!");
                 }
-                if((!isset($reward["meta"])) or (!is_numeric($reward["meta"]))) {
-                    throw new PluginException("Error while parsing through rewards! Invalid item meta in reward named $id!");
+                $item = StringToItemParser::getInstance()->parse($reward["id"]);
+                if(is_null($item)) {
+                    throw new PluginException("Error while parsing through rewards! Item with named $id could not be found!");
                 }
-                if((!isset($reward["count"])) or (!is_numeric($reward["count"]))) {
-                    throw new PluginException("Error while parsing through rewards! Invalid item count in reward named $id!");
-                }
-                $item = Item::get((int)$reward["id"], (int)$reward["meta"], (int)$reward["count"]);
                 if(isset($reward["customName"]) and $reward["customName"] !== "Default") {
                     $item->setCustomName(str_replace("&", TextFormat::ESCAPE, (string)$reward["customName"]));
                 }
@@ -84,7 +84,7 @@ class Loader extends PluginBase {
                         if(!isset($parts[1])) {
                             throw new PluginException("Error while parsing through rewards! Invalid enchantment found in reward named $id!");
                         }
-                        $enchantment = Enchantment::getEnchantment((int)$parts[0]);
+                        $enchantment = StringToEnchantmentParser::getInstance()->parse($parts[0]);
                         if($enchantment === null) {
                             throw new PluginException("Error while parsing through rewards! Unknown enchantment id $parts[0] in reward named $id!");
                         }
