@@ -1,7 +1,6 @@
 ---
-# Item ID of the reward
-# This will permanently override the item
-mining-reward-id: 381 # Ender Eye
+# Item Name of the reward
+mining-reward-id: diamond # Diamond
 
 # Use & for color
 prefix: "&8[&a&lMR&r&8] "
@@ -19,18 +18,21 @@ titles:
 rewards:
   1: # Can be anything
     type: "item"
-    id: 1
-    meta: 0
-    count: 1
+    id: stone # Vanilla name of Item
     customName: "Default" # "Default" for the default name
     enchantments:
-      - "0:1" # ID:Level
-      - "1:1"
-      - "2:1"
+      - "protection:1" # Name:Level
+      - "fire_protection:1"
+      - "feather_falling:1"
   2: # Can be anything
     type: "command"
-    command: "give {player} 1 1"
+    command: "give {player} stone 1"
     message: "&aYou've received a reward" # & for color
+
+# Add blocks here that you want to not give rewards for
+blacklist:
+  - grass
+  - dirt
 
 reward-count-min: 1 # The min amount of rewards a player can get.
 reward-count-max: 5 # The max amount of rewards a player can get.
