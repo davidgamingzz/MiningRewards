@@ -38,7 +38,7 @@ class EventListener implements Listener {
         if($event->isCancelled()) {
             return;
         }
-        if(in_array($event->getItem()->getVanillaName(), array_map('strtolower', Loader::getInstance()->getConfig()->get("blacklist", [])))) {
+        if(in_array(strtolower($event->getItem()->getVanillaName()), array_map('strtolower', Loader::getInstance()->getConfig()->get("blacklist", [])))) {
             return;
         }
         if(chance($this->plugin->getChance())) {
